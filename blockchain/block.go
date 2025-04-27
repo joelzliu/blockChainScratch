@@ -3,12 +3,15 @@ package blockchain
 import (
 	"bytes"
 	"crypto/md5"
+	"math/rand"
+	"time"
 )
 
 type Block struct {
 	Hash     string
 	Data     string
 	PrevHash string
+	Nonce    int
 }
 
 func (b *Block) ComputeHash() {
@@ -24,8 +27,18 @@ func (b *Block) ComputeHash() {
 // }
 
 func CreateBlock(data string, prevHash string) *Block {
-	block := &Block{"", data, prevHash}
-	block.ComputeHash()
+	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
+	initialNonce := rand.Intn(10000)
+
+	block := &Block{"", data, prevHash, initialNonce}
+
+	newPow := NewProofOfWork(block)
+
+	nonce, hash := newPow.MineBlock()
+
+	block.Hash = string(hash[:])
+	block.Nonce = nonce
+
 	return block
 }
 
